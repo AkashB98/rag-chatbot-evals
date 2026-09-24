@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>grounded-rag-chat — Helios Home support demo</title>
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --line:#30363d; --txt:#e6edf3;
+          --dim:#8b949e; --acc:#58a6ff; --ok:#3fb950; --warn:#d29922; --no:#f85149; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt);
+         font:15px/1.55 -apple-system,"Segoe UI",Roboto,sans-serif; }
+  header { border-bottom:1px solid var(--line); padding:14px 22px;
+           display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  header h1 { font-size:17px; margin:0; font-weight:650; }
+  header h1 span { color:var(--dim); font-weight:400; }
+  .badge { font-size:12px; border:1px solid var(--line); border-radius:20px;
+           padding:2px 10px; color:var(--dim); }
+  .badge.mode { color:var(--ok); border-color:#2ea04355; }
+  #stats { margin-left:auto; font-size:12.5px; color:var(--dim); }
+  main { max-width:860px; margin:0 auto; padding:20px 16px 140px; }
+  .msg { margin:14px 0; max-width:100%; }
+  .msg.user { text-align:right; }
+  .bubble { display:inline-block; text-align:left; padding:10px 14px;
+            border-radius:14px; max-width:85%; white-space:pre-wrap; }
+  .user .bubble { background:#1f6feb; color:#fff; border-bottom-right-radius:4px; }
+  .bot .bubble { background:var(--panel); border:1px solid var(--line);
+                 border-bottom-left-radius:4px; }
+  .bot.refused .bubble { border-color:#f8514966; }
+  .meta { font-size:12px; color:var(--dim); margin-top:6px;
+          display:flex; gap:14px; flex-wrap:wrap; }
+  .cite { font-size:12.5px; color:var(--dim); margin-top:8px; border-left:3px solid var(--acc);
+          padding:4px 10px; background:#0d1117; border-radius:0 8px 8px 0; }
+  .cite b { color:var(--txt); }
+  .conf { display:inline-block; min-width:90px; height:6px; background:#21262d;
+          border-radius:4px; vertical-align:middle; overflow:hidden; }
+  .conf i { display:block; height:100%; background:var(--ok); }
+  .refused-tag { color:var(--no); font-weight:600; font-size:12px; }
+  #quick { display:flex; gap:8px; flex-wrap:wrap; margin:6px 0 4px; }
+  #quick button { background:var(--panel); color:var(--acc); border:1px solid var(--line);
+                  border-radius:20px; padding:5px 12px; font-size:12.5px; cursor:pointer; }
+  #quick button:hover { border-color:var(--acc); }
+  #composer { position:fixed; bottom:0; left:0; right:0; background:#0d1117ee;
+              border-top:1px solid var(--line); padding:14px 16px;
+              backdrop-filter:blur(6px); }
+  #composer form { max-width:860px; margin:0 auto; display:flex; gap:10px; }
+  #q { flex:1; background:var(--panel); border:1px solid var(--line); color:var(--txt);
+       border-radius:10px; padding:11px 14px; font-size:15px; }
+  #q:focus { outline:none; border-color:var(--acc); }
+  button.send { background:#1f6feb; color:#fff; border:0; border-radius:10px;
+                padding:0 22px; font-size:15px; cursor:pointer; }
+  button.send:disabled { opacity:.5; cursor:wait; }
+  .typing { color:var(--dim); font-style:italic; }
+  footer { text-align:center; color:var(--dim); font-size:12px; padding:18px; }
+  footer a { color:var(--acc); }
+</style>
+</head>
+<body>
+<header>
+  <h1>grounded-rag-chat <span>— answers only from the docs, with receipts</span></h1>
+  <span class="badge mode" id="mode">extractive</span>
+  <span class="badge">fictional demo corpus: Helios Home</span>
+  <span id="stats"></span>
+</header>
+<main id="log"></main>
+<div id="composer">
+  <form id="form">
+    <div style="max-width:860px;margin:0 auto 8px;" id="quickwrap">
+      <div id="quick"></div>
+    </div>
+    <input id="q" autocomplete="off" maxlength="2000"
+           placeholder="Ask about Helios Home products, policies, or support…">
+    <button class="send" id="send">Ask</button>
+  </form>
+</div>
+<footer>
+  Every answer cites its source document · out-of-scope questions are refused, not hallucinated ·
+  evals: <code>python evals/run_evals.py</code>
+</footer>
+<script>
+const log = document.getElementById('log');
+const form = document.getElementById('form');
+const q = document.getElementById('q');
+const sendBtn = document.getElementById('send');
+
+const SAMPLES = [
+  "How long is the warranty on Helios devices?",
+  "Can I return a device after 45 days?",
+  "How long does the Thermostat X2 battery last per charge?",
+  "What is the stock price of Helios Home today?",
+];
+const quick = document.getElementById('quick');
+SAMPLES.forEach(s => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.textContent = s;
+  b.onclick = () => { q.value = s; form.requestSubmit(); };
+  quick.appendChild(b);
+});
+
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+function addMsg(cls, html){ const d=document.createElement('div'); d.className='msg '+cls; d.innerHTML=html; log.appendChild(d); window.scrollTo(0,document.body.scrollHeight); return d; }
+
+async function refreshStats(){
+  try {
+    const s = await (await fetch('/api/stats')).json();
+    document.getElementById('stats').textContent =
+      `${s.queries} queries · ${s.refusals} refusals · avg ${s.avg_latency_ms}ms · $${s.total_cost_usd}`;
+  } catch(e){}
+}
+async function refreshHealth(){
+  try {
+    const h = await (await fetch('/api/health')).json();
+    document.getElementById('mode').textContent = h.mode;
+  } catch(e){}
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const text = q.value.trim();
+  if (!text) return;
+  q.value = ''; sendBtn.disabled = true;
+  addMsg('user', `<span class="bubble">${esc(text)}</span>`);
+  const t = addMsg('bot', `<span class="bubble typing">searching the docs…</span>`);
+  try {
+    const r = await (await fetch('/api/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({question: text})
+    })).json();
+    if (r.error) throw new Error(r.error);
+    const pct = Math.round(r.confidence * 100);
+    const cites = r.citations.map(c =>
+      `<div class="cite"><b>[${esc(c.doc_id)}]</b> ${esc(c.title)}${c.quote ? '<br>“'+esc(c.quote.slice(0,220))+'”' : ''}</div>`).join('');
+    t.className = 'msg bot' + (r.refused ? ' refused' : '');
+    t.innerHTML = `<span class="bubble">${r.refused ? '<span class="refused-tag">REFUSED — no supporting doc</span><br>' : ''}${esc(r.answer)}</span>
+      <div class="meta"><span>mode: ${esc(r.mode)}</span>
+      <span>confidence <span class="conf"><i style="width:${pct}%"></i></span> ${pct}%</span>
+      <span>${r.latency_ms}ms</span>
+      ${r.usage.est_cost_usd ? `<span>$${r.usage.est_cost_usd}</span>` : ''}</div>${cites}`;
+  } catch(err) {
+    t.innerHTML = `<span class="bubble">Something went wrong: ${esc(err.message)}</span>`;
+  }
+  sendBtn.disabled = false;
+  refreshStats();
+  q.focus();
+});
+
+refreshHealth(); refreshStats();
+addMsg('bot', `<span class="bubble">Hi — I answer questions about <b>Helios Home</b> (fictional demo company) using only its support docs. Every answer cites its source; if the docs don't cover it, I'll say so instead of guessing. Try a sample question below.</span>`);
+</script>
+</body>
+</html>
