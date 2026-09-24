@@ -1,0 +1,129 @@
+{
+  "summary": {
+    "n_answerable": 10,
+    "n_out_of_scope": 4,
+    "retrieval_recall@5": 1.0,
+    "answer_hit_rate": 1.0,
+    "faithfulness": 1.0,
+    "refusal_accuracy": 1.0,
+    "in_scope_answer_rate": 1.0,
+    "avg_latency_ms": 114.8,
+    "mode": "extractive"
+  },
+  "rows": [
+    {
+      "q": "How long is the warranty on Helios devices?",
+      "type": "answerable",
+      "retrieval_recall@5": true,
+      "answer_hit": true,
+      "faithfulness": 1.0,
+      "refused": false,
+      "top_doc": "warranty-policy"
+    },
+    {
+      "q": "Can I return a device after 45 days?",
+      "type": "answerable",
+      "retrieval_recall@5": true,
+      "answer_hit": true,
+      "faithfulness": 1.0,
+      "refused": false,
+      "top_doc": "returns-policy"
+    },
+    {
+      "q": "How long does the Thermostat X2 battery last per charge?",
+      "type": "answerable",
+      "retrieval_recall@5": true,
+      "answer_hit": true,
+      "faithfulness": 1.0,
+      "refused": false,
+      "top_doc": "thermostat-specs"
+    },
+    {
+      "q": "How much does Helios Care Plus cost per month?",
+      "type": "answerable",
+      "retrieval_recall@5": true,
+      "answer_hit": true,
+      "faithfulness": 1.0,
+      "refused": false,
+      "top_doc": "care-plans"
+    },
+    {
+      "q": "My hub won't connect to Wi-Fi. What should I check first?",
+      "type": "answerable",
+      "retrieval_recall@5": true,
+      "answer_hit": true,
+      "faithfulness": 1.0,
+      "refused": false,
+      "top_doc": "troubleshoot-wifi"
+    },
+    {
+      "q": "How long do you keep my telemetry data?",
+      "type": "answerable",
+      "retrieval_recall@5": true,
+      "answer_hit": true,
+      "faithfulness": 1.0,
+      "refused": false,
+      "top_doc": "privacy-policy"
+    },
+    {
+      "q": "Do I need a C-wire to install the Thermostat X2?",
+      "type": "answerable",
+      "retrieval_recall@5": true,
+      "answer_hit": true,
+      "faithfulness": 1.0,
+      "refused": false,
+      "top_doc": "installation-guide"
+    },
+    {
+      "q": "What order total gets me free standard shipping?",
+      "type": "answerable",
+      "retrieval_recall@5": true,
+      "answer_hit": true,
+      "faithfulness": 1.0,
+      "refused": false,
+      "top_doc": "shipping-info"
+    },
+    {
+      "q": "Is water damage covered by the warranty?",
+      "type": "answerable",
+      "retrieval_recall@5": true,
+      "answer_hit": true,
+      "faithfulness": 1.0,
+      "refused": false,
+      "top_doc": "warranty-policy"
+    },
+    {
+      "q": "What does Helios Care Pro cost and what extra do I get?",
+      "type": "answerable",
+      "retrieval_recall@5": true,
+      "answer_hit": true,
+      "faithfulness": 1.0,
+      "refused": false,
+      "top_doc": "care-plans"
+    },
+    {
+      "q": "Who won the 2024 World Series?",
+      "type": "out_of_scope",
+      "refused": true,
+      "refusal_correct": true
+    },
+    {
+      "q": "What is the stock price of Helios Home today?",
+      "type": "out_of_scope",
+      "refused": true,
+      "refusal_correct": true
+    },
+    {
+      "q": "Write me a haiku about the ocean.",
+      "type": "out_of_scope",
+      "refused": true,
+      "refusal_correct": true
+    },
+    {
+      "q": "How do I change the oil in my car?",
+      "type": "out_of_scope",
+      "refused": true,
+      "refusal_correct": true
+    }
+  ]
+}
