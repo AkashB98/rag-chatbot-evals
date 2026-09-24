@@ -1,0 +1,7 @@
+# Local embeddings (runs fully offline, no API keys)
+fastembed==0.8.0
+# Vector search inside SQLite
+sqlite-vec
+
+# Tests
+pytest
